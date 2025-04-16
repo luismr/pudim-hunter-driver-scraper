@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2025-04-16
+
+### Added
+- Support for multiple browser contexts in PlaywrightScraper
+- Browser installation verification and auto-repair
+- Enhanced error reporting for browser operations
+
+### Changed
+- Improved browser resource management
+- Enhanced error handling in browser operations
+- Updated browser installation process
+- Refined test suite with more robust browser tests
+
+### Fixed
+- Browser cleanup in error scenarios
+- Memory leaks in long-running scraper sessions
+- Browser context isolation issues
+
 ## [0.0.3] - 2025-04-16
 
 ### Changed
@@ -60,7 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pytest-asyncio>=0.21.0
 - pytest-cov>=4.1.0
 
-[Unreleased]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/luismr/pudim-hunter-driver-scraper/releases/tag/v0.0.1 

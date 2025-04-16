@@ -3,12 +3,11 @@ import re
 from setuptools import setup, find_packages
 
 def get_version():
-    init_py = os.path.join(os.path.dirname(__file__), "src", "pudim_hunter_driver_scraper", "__init__.py")
-    with open(init_py, "r", encoding="utf-8") as f:
-        version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M)
-        if version_match:
-            return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+    # Get version from git tag if available
+    version = os.environ.get('GITHUB_REF', '')
+    if version.startswith('refs/tags/v'):
+        return version.split('/')[-1][1:]  # Remove 'v' prefix
+    return "0.0.4" 
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
