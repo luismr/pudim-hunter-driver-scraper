@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.2] - 2024-03-19
+## [0.0.3] - 2025-04-16
+
+### Changed
+- Updated project configuration to match parent project structure
+- Simplified pyproject.toml configuration
+- Moved package metadata to setup.py
+- Improved version management with dynamic version reading
+- Streamlined project dependencies management
+
+### Fixed
+- Package metadata consistency across configuration files
+- Version handling in package configuration
+- Project structure alignment with pudim-hunter-driver
+
+## [0.0.2] - 2025-04-16
 
 ### Added
 - Support for both synchronous and asynchronous operations in PlaywrightScraper
@@ -25,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Synchronous context manager implementation
 - Resource cleanup in both sync and async modes
 
-## [0.0.1] - 2024-03-19
+## [0.0.1] - 2025-04-16
 
 ### Added
 - Initial release of pudim-hunter-driver-scraper
@@ -46,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pytest-asyncio>=0.21.0
 - pytest-cov>=4.1.0
 
-[Unreleased]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/luismr/pudim-hunter-driver-scraper/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/luismr/pudim-hunter-driver-scraper/releases/tag/v0.0.1 
