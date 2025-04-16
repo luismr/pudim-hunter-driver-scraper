@@ -5,5 +5,5 @@ Pudim Hunter Driver Scraper - A Playwright-based scraper implementation for The 
 from .scraper import PlaywrightScraper
 from .driver import ScraperJobDriver
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __all__ = ["PlaywrightScraper", "ScraperJobDriver"] 
