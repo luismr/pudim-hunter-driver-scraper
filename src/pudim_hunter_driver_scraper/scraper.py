@@ -3,7 +3,7 @@ Base Playwright scraper implementation.
 """
 import subprocess
 import logging
-from typing import Optional, Dict
+from typing import Optional
 
 from playwright.sync_api import sync_playwright, Browser, Page
 
@@ -61,29 +61,6 @@ class PlaywrightScraper:
         if not self._page:
             raise RuntimeError("Browser not initialized. Use with context.")
         self._page.goto(url)
-                
-    def extract_data(self, selectors: Dict[str, str]) -> Dict[str, Optional[str]]:
-        """Extract data from the page using multiple CSS selectors.
-        
-        Args:
-            selectors: Dictionary mapping field names to CSS selectors.
-            
-        Returns:
-            Dictionary mapping field names to extracted text content.
-            If a selector doesn't match, its value will be None.
-            
-        Raises:
-            RuntimeError: If browser is not initialized.
-        """
-        if not self._page:
-            raise RuntimeError("Browser not initialized. Use with context.")
-            
-        results = {}
-        for field, selector in selectors.items():
-            element = self._page.query_selector(selector)
-            results[field] = element.text_content() if element else None
-            
-        return results
                 
     def __install_playwright(self):
         """Ensure Playwright and its browsers are installed."""

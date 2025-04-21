@@ -20,6 +20,7 @@ class ScraperJobDriver(JobDriver):
             headless: Whether to run the browser in headless mode.
         """
         self.headless = headless
+
         
     @abstractmethod
     def build_search_url(self, query: JobQuery) -> str:
@@ -32,6 +33,7 @@ class ScraperJobDriver(JobDriver):
             The complete search URL.
         """
         pass
+
         
     @abstractmethod
     def get_selectors(self) -> Dict[str, str]:
@@ -42,8 +44,22 @@ class ScraperJobDriver(JobDriver):
         """
         pass
         
+
     @abstractmethod
-    def transform_data(self, data: Dict[str, Any]) -> Optional[Job]:
+    def extract_raw_job_data(self) -> Optional[Any]:
+        """Extract job data from the page using a CSS selector.
+        
+        Args:
+            selector: The Playwright selector to use.
+            
+        Returns:
+            ElementHandle or None if selector not found.
+        """
+        pass
+        
+
+    @abstractmethod
+    def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
         """Transform scraped data into a Job object.
         
         Args:
@@ -54,6 +70,7 @@ class ScraperJobDriver(JobDriver):
         """
         pass
         
+
     def fetch_jobs(self, query: JobQuery) -> JobList:
         """Fetch jobs using Playwright scraper.
         
@@ -68,10 +85,12 @@ class ScraperJobDriver(JobDriver):
                 url = self.build_search_url(query)
                 scraper.navigate(url)
                 
-                raw_data = scraper.extract_data(self.get_selectors())
-                job = self.transform_data(raw_data)
+                jobs = []
                 
-                jobs = [job] if job else []
+                raw_jobs = self.extract_raw_job_data()
+                for raw_job in raw_jobs:
+                    job = self.transform_job(raw_job)
+                    jobs.append(job)
                 
                 return JobList(
                     jobs=jobs,

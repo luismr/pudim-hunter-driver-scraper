@@ -5,11 +5,7 @@ import pytest
 from pudim_hunter_driver_scraper import PlaywrightScraper
 
 TEST_URL = "https://github.com/luismr"
-TEST_SELECTORS = {
-    "name": ".vcard-fullname",
-    "bio": ".user-profile-bio",
-    "repositories": "nav.UnderlineNav-body a[href$='repositories'] span.Counter"
-}
+TEST_SELECTOR = ".vcard-fullname"  # GitHub profile name selector
 
 def test_scraper_context_manager():
     """Test that the scraper can be used as a context manager."""
@@ -29,41 +25,33 @@ def test_scraper_navigation():
         scraper.navigate(TEST_URL)
         assert "github.com/luismr" in scraper._page.url
 
-def test_scraper_extract_data():
-    """Test that the scraper can extract data using multiple selectors."""
+def test_scraper_get_element():
+    """Test that the scraper can get an element using a selector."""
     with PlaywrightScraper() as scraper:
         scraper.navigate(TEST_URL)
-        data = scraper.extract_data(TEST_SELECTORS)
-        
-        # Verify all fields are present
-        assert all(field in data for field in TEST_SELECTORS)
-        
-        # Verify name is present (this should always exist)
-        assert data["name"] is not None
-        assert isinstance(data["name"], str)
-        assert len(data["name"]) > 0
+        element = scraper._page.query_selector(TEST_SELECTOR)
+        assert element is not None
+        assert element.text_content() is not None
+        assert len(element.text_content()) > 0
 
-def test_scraper_extract_data_invalid_selectors():
-    """Test that the scraper handles invalid selectors gracefully."""
-    invalid_selectors = {
-        "nonexistent1": "#this-element-does-not-exist",
-        "nonexistent2": ".this-class-does-not-exist",
-        "nonexistent3": "[data-test='nonexistent']"
-    }
-    
+def test_scraper_get_elements():
+    """Test that the scraper can get multiple elements using a selector."""
     with PlaywrightScraper() as scraper:
         scraper.navigate(TEST_URL)
-        data = scraper.extract_data(invalid_selectors)
-        
-        assert all(field in data for field in invalid_selectors)
-        assert all(value is None for value in data.values())
+        elements = scraper._page.query_selector_all("a")  # Get all links
+        assert len(elements) > 0
+        assert all(e is not None for e in elements)
+
+def test_scraper_get_nonexistent_element():
+    """Test that the scraper handles nonexistent elements gracefully."""
+    with PlaywrightScraper() as scraper:
+        scraper.navigate(TEST_URL)
+        element = scraper._page.query_selector("#nonexistent-element")
+        assert element is None
 
 def test_scraper_without_context():
     """Test that the scraper raises appropriate errors when used outside context."""
     scraper = PlaywrightScraper()
     
     with pytest.raises(RuntimeError, match="Browser not initialized"):
-        scraper.navigate(TEST_URL)
-    
-    with pytest.raises(RuntimeError, match="Browser not initialized"):
-        scraper.extract_data(TEST_SELECTORS) 
+        scraper.navigate(TEST_URL) 
