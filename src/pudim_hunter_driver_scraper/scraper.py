@@ -83,61 +83,25 @@ class PlaywrightScraper:
         if not self._page:
             raise RuntimeError("Browser not initialized. Use with context.")
         self._page.goto(url)
-        
-    async def navigate_async(self, url: str) -> None:
-        """Navigate to a URL asynchronously.
-        
-        Args:
-            url: The URL to navigate to.
-        """
-        if not self._page:
-            raise RuntimeError("Browser not initialized. Use async with context.")
-        await self._page.goto(url)
-        
-    def extract_data(self, selectors: Dict[str, str]) -> Dict[str, Any]:
+                
+    def extract_data(self, selector: str) -> Any:
         """Extract data from the page using CSS selectors synchronously.
         
         Args:
-            selectors: Dictionary mapping field names to CSS selectors.
+            selector: Any Valid Playwright selector.
             
         Returns:
-            Dictionary of extracted data.
+            The text content of the element.
         """
         if not self._page:
             raise RuntimeError("Browser not initialized. Use with context.")
             
-        result = {}
-        for field, selector in selectors.items():
-            element = self._page.query_selector(selector)
-            if element:
-                result[field] = element.text_content()
-            else:
-                result[field] = None
+        element = self._page.query_selector(selector)
+        if element:
+            return element.text_content()
+        else:
+            return element
                 
-        return result
-        
-    async def extract_data_async(self, selectors: Dict[str, str]) -> Dict[str, Any]:
-        """Extract data from the page using CSS selectors asynchronously.
-        
-        Args:
-            selectors: Dictionary mapping field names to CSS selectors.
-            
-        Returns:
-            Dictionary of extracted data.
-        """
-        if not self._page:
-            raise RuntimeError("Browser not initialized. Use async with context.")
-            
-        result = {}
-        for field, selector in selectors.items():
-            element = await self._page.query_selector(selector)
-            if element:
-                result[field] = await element.text_content()
-            else:
-                result[field] = None
-                
-        return result
-    
     def __install_playwright(self):
         """Ensure Playwright and its browsers are installed."""
         try:
