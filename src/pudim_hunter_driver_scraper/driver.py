@@ -22,7 +22,7 @@ class ScraperJobDriver(JobDriver):
         self.headless = headless
         
     @abstractmethod
-    async def build_search_url(self, query: JobQuery) -> str:
+    def build_search_url(self, query: JobQuery) -> str:
         """Build the search URL for the job board.
         
         Args:
@@ -54,7 +54,7 @@ class ScraperJobDriver(JobDriver):
         """
         pass
         
-    async def fetch_jobs(self, query: JobQuery) -> JobList:
+    def fetch_jobs(self, query: JobQuery) -> JobList:
         """Fetch jobs using Playwright scraper.
         
         Args:
@@ -64,11 +64,11 @@ class ScraperJobDriver(JobDriver):
             List of jobs matching the query.
         """
         try:
-            async with PlaywrightScraper(headless=self.headless) as scraper:
-                url = await self.build_search_url(query)
-                await scraper.navigate(url)
+            with PlaywrightScraper(headless=self.headless) as scraper:
+                url = self.build_search_url(query)
+                scraper.navigate(url)
                 
-                raw_data = await scraper.extract_data(self.get_selectors())
+                raw_data = scraper.extract_data(self.get_selectors())
                 job = self.transform_data(raw_data)
                 
                 jobs = [job] if job else []
@@ -83,7 +83,7 @@ class ScraperJobDriver(JobDriver):
         except Exception as e:
             raise DriverError(f"Failed to fetch jobs: {str(e)}")
             
-    async def validate_credentials(self) -> bool:
+    def validate_credentials(self) -> bool:
         """Validate driver credentials.
         
         Returns:

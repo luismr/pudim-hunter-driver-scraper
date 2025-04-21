@@ -1,13 +1,11 @@
 """
 Base Playwright scraper implementation.
 """
-import asyncio
 import subprocess
 import logging
+from typing import Optional, Dict
 
-from typing import Optional, Dict, Any
-from playwright.sync_api import sync_playwright
-from playwright.async_api import async_playwright, Browser, Page
+from playwright.sync_api import sync_playwright, Browser, Page
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +27,7 @@ class PlaywrightScraper:
         self._playwright = None
 
     def __enter__(self):
-        """Set up the browser context for synchronous usage."""
+        """Set up the browser context."""
         self._playwright = sync_playwright().start()
         self._browser = self._playwright.chromium.launch(headless=self.headless)
         self._context = self._browser.new_context()
@@ -37,7 +35,7 @@ class PlaywrightScraper:
         return self
         
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Clean up browser resources for synchronous usage."""
+        """Clean up browser resources."""
         if self._page:
             self._page.close()
         if self._context:
@@ -51,56 +49,41 @@ class PlaywrightScraper:
         self._browser = None
         self._playwright = None
             
-    async def __aenter__(self):
-        """Set up the browser context for asynchronous usage."""
-        self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(headless=self.headless)
-        self._context = await self._browser.new_context()
-        self._page = await self._context.new_page()
-        return self
-        
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Clean up browser resources for asynchronous usage."""
-        if self._page:
-            await self._page.close()
-        if self._context:
-            await self._context.close()
-        if self._browser:
-            await self._browser.close()
-        if self._playwright:
-            await self._playwright.stop()
-        self._page = None
-        self._context = None
-        self._browser = None
-        self._playwright = None
-            
     def navigate(self, url: str) -> None:
-        """Navigate to a URL synchronously.
+        """Navigate to a URL.
         
         Args:
             url: The URL to navigate to.
+            
+        Raises:
+            RuntimeError: If browser is not initialized.
         """
         if not self._page:
             raise RuntimeError("Browser not initialized. Use with context.")
         self._page.goto(url)
                 
-    def extract_data(self, selector: str) -> Any:
-        """Extract data from the page using CSS selectors synchronously.
+    def extract_data(self, selectors: Dict[str, str]) -> Dict[str, Optional[str]]:
+        """Extract data from the page using multiple CSS selectors.
         
         Args:
-            selector: Any Valid Playwright selector.
+            selectors: Dictionary mapping field names to CSS selectors.
             
         Returns:
-            The text content of the element.
+            Dictionary mapping field names to extracted text content.
+            If a selector doesn't match, its value will be None.
+            
+        Raises:
+            RuntimeError: If browser is not initialized.
         """
         if not self._page:
             raise RuntimeError("Browser not initialized. Use with context.")
             
-        element = self._page.query_selector(selector)
-        if element:
-            return element.text_content()
-        else:
-            return element
+        results = {}
+        for field, selector in selectors.items():
+            element = self._page.query_selector(selector)
+            results[field] = element.text_content() if element else None
+            
+        return results
                 
     def __install_playwright(self):
         """Ensure Playwright and its browsers are installed."""
