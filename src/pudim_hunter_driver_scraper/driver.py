@@ -20,7 +20,21 @@ class ScraperJobDriver(JobDriver):
             headless: Whether to run the browser in headless mode.
         """
         self.headless = headless
+        self._scraper: Optional[PlaywrightScraper] = None
 
+    @property
+    def scraper(self) -> PlaywrightScraper:
+        """Get the current scraper instance.
+        
+        Returns:
+            The current scraper instance.
+            
+        Raises:
+            RuntimeError: If scraper is not initialized.
+        """
+        if not self._scraper:
+            raise RuntimeError("Scraper not initialized. Use within fetch_jobs context.")
+        return self._scraper
         
     @abstractmethod
     def build_search_url(self, query: JobQuery) -> str:
@@ -33,7 +47,6 @@ class ScraperJobDriver(JobDriver):
             The complete search URL.
         """
         pass
-
         
     @abstractmethod
     def get_selectors(self) -> Dict[str, str]:
@@ -44,20 +57,15 @@ class ScraperJobDriver(JobDriver):
         """
         pass
         
-
     @abstractmethod
     def extract_raw_job_data(self) -> Optional[Any]:
         """Extract job data from the page using a CSS selector.
         
-        Args:
-            selector: The Playwright selector to use.
-            
         Returns:
-            ElementHandle or None if selector not found.
+            List of raw job data or None if no jobs found.
         """
         pass
         
-
     @abstractmethod
     def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
         """Transform scraped data into a Job object.
@@ -70,7 +78,6 @@ class ScraperJobDriver(JobDriver):
         """
         pass
         
-
     def fetch_jobs(self, query: JobQuery) -> JobList:
         """Fetch jobs using Playwright scraper.
         
@@ -79,18 +86,23 @@ class ScraperJobDriver(JobDriver):
             
         Returns:
             List of jobs matching the query.
+            
+        Raises:
+            DriverError: If job fetching fails.
         """
         try:
             with PlaywrightScraper(headless=self.headless) as scraper:
+                self._scraper = scraper  # Store the scraper instance
                 url = self.build_search_url(query)
-                scraper.navigate(url)
+                self.scraper.navigate(url)
                 
                 jobs = []
-                
                 raw_jobs = self.extract_raw_job_data()
-                for raw_job in raw_jobs:
-                    job = self.transform_job(raw_job)
-                    jobs.append(job)
+                if raw_jobs:
+                    for raw_job in raw_jobs:
+                        job = self.transform_job(raw_job)
+                        if job:
+                            jobs.append(job)
                 
                 return JobList(
                     jobs=jobs,
@@ -101,6 +113,8 @@ class ScraperJobDriver(JobDriver):
                 
         except Exception as e:
             raise DriverError(f"Failed to fetch jobs: {str(e)}")
+        finally:
+            self._scraper = None  # Always clean up the scraper reference
             
     def validate_credentials(self) -> bool:
         """Validate driver credentials.
