@@ -31,6 +31,15 @@ jobs:
       run: |
         python -m pytest tests/ --cov=src/pudim_hunter_driver_scraper --cov-report=xml
         
+    - name: Upload test screenshots
+      if: always()  # Run even if tests fail
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-screenshots
+        path: test_screenshots/**/*.png
+        if-no-files-found: ignore  # Don't fail if no screenshots
+        retention-days: 14  # Keep for 14 days
+        
     - name: Upload coverage to Codecov
       if: ${{ !cancelled() }}
       uses: codecov/codecov-action@v5
