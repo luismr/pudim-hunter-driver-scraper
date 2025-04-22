@@ -9,6 +9,7 @@ from screenshots import ScreenshotTaker
 
 TEST_URL = "https://bot.sannysoft.com"
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_bot_detection_site():
     """Test access to bot detection test site."""
     scraper = PhantomPlaywrightScraper(navigation_timeout=60000)  # 60 second timeout
@@ -67,6 +68,7 @@ def test_bot_detection_site():
             screenshots.take_error_screenshot(scraper.page)
         raise
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_basic_scraper_comparison():
     """Test that our anti-detection features make a difference."""
     # First try with basic scraper

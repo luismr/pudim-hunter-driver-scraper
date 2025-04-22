@@ -6,70 +6,206 @@
 [![codecov](https://codecov.io/gh/luismr/pudim-hunter-driver-scraper/branch/main/graph/badge.svg)](https://codecov.io/gh/luismr/pudim-hunter-driver-scraper)
 [![PyPI version](https://badge.fury.io/py/pudim-hunter-driver-scraper.svg)](https://pypi.org/project/pudim-hunter-driver-scraper/)
 
+A Python package that provides a Playwright-based scraper implementation for The Pudim Hunter platform. This package extends the `pudim-hunter-driver` interface to provide a common base for implementing job board scrapers.
+
 ## Table of Contents
 
-* Features
-* Usage
-  * Installation
-  * Interface Overview
-* Project Structure
-* Installation
-* Virtual Environment Setup
-  * Prerequisites
-  * macOS and Linux
-  * Windows
-  * Troubleshooting
-* Development
-* Contributing
-  * Getting Started
-  * Pull Request Process
-  * Repository
-* License
-
-A Python package that provides a Playwright-based scraper implementation for The Pudim Hunter platform. This package extends the `pudim-hunter-driver` interface to provide a common base for implementing job board scrapers.
+1. [Features](#features)
+2. [Installation](#installation)
+   - [PyPI Installation](#pypi-installation)
+   - [Development Installation](#development-installation)
+3. [Usage](#usage)
+   - [Interface Overview](#interface-overview)
+   - [Example Implementation](#example-implementation)
+   - [Usage Examples](#usage-examples)
+4. [Development Setup](#development-setup)
+   - [Virtual Environment](#virtual-environment)
+   - [Prerequisites](#prerequisites)
+   - [Setup Instructions](#setup-instructions)
+5. [Project Structure](#project-structure)
+6. [Testing](#testing)
+7. [Contributing](#contributing)
+   - [Getting Started](#getting-started)
+   - [Pull Request Process](#pull-request-process)
+8. [License](#license)
 
 ## Features
 
 * Playwright-based web scraping
-* Async support for better performance
 * Headless browser automation
 * Easy-to-extend base classes for job board implementations
 * Built-in error handling and resource management
 * Type hints and validation using Pydantic
+* Advanced anti-detection scraping with `PhantomPlaywrightScraper`
+  - WebDriver detection evasion
+  - WebGL vendor spoofing
+  - Chrome properties emulation
+  - Plugin spoofing
+  - Language preferences customization
+  - And more stealth features
 
-## Usage
+## Installation
 
-### Installation
+### PyPI Installation
 
 You can install the package directly from PyPI:
 
 ```bash
-# Install directly using pip
 pip install pudim-hunter-driver-scraper
+```
 
-# Or add to your requirements.txt
+Or add to your requirements.txt:
+```
 pudim-hunter-driver-scraper>=0.0.1  # Replace with the version you need
 ```
 
-For development installations, see the Development section.
+### Development Installation
+
+For development:
+```bash
+git clone git@github.com:luismr/pudim-hunter-driver-scraper.git
+cd pudim-hunter-driver-scraper
+pip install -e .
+```
+
+## Usage
 
 ### Interface Overview
 
 This package provides the base scraper implementation for job search drivers. To create a scraper for a specific job board, you'll need to extend the `ScraperJobDriver` class and implement the required methods.
 
 1. `ScraperJobDriver` (ABC) - The base scraper class that implements `JobDriver`:
-   * `async build_search_url(query: JobQuery) -> str`
-   * `def get_selectors() -> Dict[str, str]`
-   * `def transform_data(data: Dict[str, Any]) -> Optional[Job]`
+   * `build_search_url(query: JobQuery) -> str`
+   * `get_selectors() -> Dict[str, str]`
+   * `extract_raw_job_data() -> Optional[List[Dict[str, Any]]]`
+   * `transform_job(data: Dict[str, Any]) -> Optional[Job]`
 
 2. `PlaywrightScraper` - The base scraper implementation:
-   * Supports both sync and async operations
    * Handles browser lifecycle
    * Provides navigation and data extraction methods
+   * Context manager support with `with` statement
 
-3. Exceptions:
+3. `PhantomPlaywrightScraper` - Enhanced scraper with anti-detection:
+   * All features of base PlaywrightScraper
+   * Advanced bot detection evasion
+   * Stealth mode configurations
+
+4. Exceptions:
    * Inherits all exceptions from `pudim-hunter-driver`
    * Adds scraper-specific error handling
+
+### Example Implementation
+
+```python
+from typing import Dict, Any, Optional, List
+from pudim_hunter_driver.models import JobQuery, Job
+from pudim_hunter_driver_scraper import ScraperJobDriver
+from pudim_hunter_driver_scraper.driver import ScraperType
+
+class MyPhantomJobDriver(ScraperJobDriver):
+    def __init__(self):
+        super().__init__(scraper_type=ScraperType.PHANTOM)
+    
+    def build_search_url(self, query: JobQuery) -> str:
+        """Build the search URL for the job board."""
+        return f"https://example.com/jobs?q={query.keywords}&l={query.location}"
+    
+    def get_selectors(self) -> Dict[str, str]:
+        """Define CSS selectors for job elements."""
+        return {
+            "job_list": ".job-listing",
+            "title": ".job-title",
+            "company": ".company-name",
+            "location": ".job-location"
+        }
+    
+    def extract_raw_job_data(self) -> Optional[List[Dict[str, Any]]]:
+        """Extract job data from the page."""
+        jobs_data = []
+        job_elements = self.scraper._page.query_selector_all(self.get_selectors()["job_list"])
+        
+        for job in job_elements:
+            title = job.query_selector(self.get_selectors()["title"])
+            company = job.query_selector(self.get_selectors()["company"])
+            
+            if title and company:
+                jobs_data.append({
+                    "title": title.inner_text(),
+                    "company": company.inner_text()
+                })
+        
+        return jobs_data
+    
+    def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
+        """Transform raw job data into Job model."""
+        if not data.get("title"):
+            return None
+            
+        return Job(
+            id=f"job-{hash(data['title'])}",
+            title=data["title"],
+            company=data["company"],
+            location="",
+            description="",
+            url="",
+            remote=False,
+            source="Example",
+            posted_at=datetime.now()
+        )
+```
+
+### Usage Examples
+
+```python
+# Using the driver
+driver = MyPhantomJobDriver()
+query = JobQuery(
+    keywords="software engineer",
+    location="San Francisco",
+    page=1,
+    items_per_page=20
+)
+
+job_list = driver.fetch_jobs(query)
+for job in job_list.jobs:
+    print(f"{job.title} at {job.company}")
+```
+
+For more detailed examples, check the test files:
+- `tests/test_driver_phantom.py`: Complete job driver implementation example
+- `tests/test_scraper_phantom.py`: Anti-detection features testing
+- `tests/test_scraper_phantom_sites.py`: Real-world site scraping examples
+
+## Development Setup
+
+### Virtual Environment
+
+We strongly recommend using a virtual environment for development and testing.
+
+### Prerequisites
+
+* Python 3.9 or higher
+* pip (Python package installer)
+* venv module (usually comes with Python 3)
+
+### Setup Instructions
+
+1. Create and activate virtual environment:
+```bash
+python3.9 -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+3. Install Playwright browsers:
+```bash
+playwright install chromium
+```
 
 ## Project Structure
 
@@ -88,182 +224,46 @@ pudim-hunter-driver-scraper/
 └── pyproject.toml              # Project configuration
 ```
 
-## Installation
+## Testing
 
-From PyPI:
+Run the tests:
 ```bash
-pip install pudim-hunter-driver-scraper
+pytest tests/
 ```
 
-From source:
-```bash
-git clone git@github.com:luismr/pudim-hunter-driver-scraper.git
-cd pudim-hunter-driver-scraper
-pip install -r requirements.txt
-```
-
-For development:
-```bash
-pip install -e .
-```
-
-## Virtual Environment Setup
-
-We strongly recommend using a virtual environment for development and testing. This isolates the project dependencies from your system Python packages.
-
-### Prerequisites
-
-* Python 3.9 or higher
-* pip (Python package installer)
-* venv module (usually comes with Python 3)
-
-### macOS and Linux
-
-1. Open Terminal and navigate to the project directory:
-```bash
-cd pudim-hunter-driver-scraper
-```
-
-2. Create a virtual environment:
-```bash
-python3.9 -m venv venv
-```
-
-3. Activate the virtual environment:
-```bash
-source venv/bin/activate
-```
-
-4. Install dependencies:
-```bash
-pip install -r requirements.txt
-pip install -e .  # for development
-```
-
-5. Install Playwright browsers:
-```bash
-playwright install chromium
-```
-
-6. To deactivate when done:
-```bash
-deactivate
-```
-
-### Windows
-
-1. Open Command Prompt or PowerShell and navigate to the project directory:
-```bash
-cd pudim-hunter-driver-scraper
-```
-
-2. Create a virtual environment:
-```bash
-python -m venv venv
-```
-
-3. Activate the virtual environment:
-* In Command Prompt:
-```bash
-.\venv\Scripts\activate.bat
-```
-* In PowerShell:
-```bash
-.\venv\Scripts\Activate.ps1
-```
-
-4. Install dependencies:
-```bash
-pip install -r requirements.txt
-pip install -e .  # for development
-```
-
-5. Install Playwright browsers:
-```bash
-playwright install chromium
-```
-
-6. To deactivate when done:
-```bash
-deactivate
-```
-
-### Troubleshooting
-
-#### macOS/Linux
-
-* If `python3.9` is not found, install it using your package manager:
-  * macOS (with Homebrew): `brew install python@3.9`
-  * Ubuntu/Debian: `sudo apt-get install python39 python39-venv`
-  * CentOS/RHEL: `sudo yum install python39 python39-devel`
-
-#### Windows
-
-* Ensure Python is added to your PATH during installation
-* If PowerShell execution policy prevents activation:
-```bash
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-## Development
-
-1. Create and activate a virtual environment:
-```bash
-python3.9 -m venv venv
-source venv/bin/activate
-```
-
-2. Install in development mode:
-```bash
-pip install -e .
-```
+Key test files:
+- `test_driver_phantom.py`: Tests for phantom job driver implementation
+- `test_scraper_phantom.py`: Tests for anti-detection capabilities
+- `test_scraper_phantom_sites.py`: Tests for real-world site scraping
 
 ## Contributing
 
-We love your input! We want to make contributing to Pudim Hunter Driver Scraper as easy and transparent as possible, whether it's:
-
-* Reporting a bug
-* Discussing the current state of the code
-* Submitting a fix
-* Proposing new features
-* Becoming a maintainer
-
 ### Getting Started
 
-1. Fork the repository
+1. Fork and clone the repository:
 ```bash
-# Clone the repository
 git clone git@github.com:luismr/pudim-hunter-driver-scraper.git
 cd pudim-hunter-driver-scraper
-# Create your feature branch
+```
+
+2. Create your feature branch:
+```bash
 git checkout -b feature/amazing-feature
-# Set up development environment
+```
+
+3. Set up development environment:
+```bash
 python3.9 -m venv venv
 source venv/bin/activate
 pip install -e .
-```
-
-2. Make your changes
-   * Write clear, concise commit messages
-   * Add tests for any new functionality
-   * Ensure all tests pass: `pytest tests/ -v`
-
-3. Push to your fork and submit a pull request
-```bash
-git push origin feature/amazing-feature
 ```
 
 ### Pull Request Process
 
-1. Update the README.md with details of changes if needed
-2. Add any new dependencies to requirements.txt
-3. Update the tests if needed
-4. The PR will be merged once you have the sign-off of the maintainers
-
-### Repository
-
-* Main repository: github.com/luismr/pudim-hunter-driver-scraper
-* Issue tracker: github.com/luismr/pudim-hunter-driver-scraper/issues
+1. Update documentation as needed
+2. Add/update tests as needed
+3. Ensure all tests pass
+4. Submit PR for review
 
 ## License
 
