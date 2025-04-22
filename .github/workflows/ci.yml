@@ -37,7 +37,7 @@ jobs:
           libhyphen0 \
           libmanette-0.2-0 \
           libgles2 \
-          libx264-160
+          libx264-dev
 
     - name: Install project dependencies
       run: |
@@ -47,7 +47,7 @@ jobs:
 
     - name: Install Playwright browsers
       run: |
-        python -m playwright install
+        python -m playwright install --with-deps
         
     - name: Run tests with coverage
       run: |
