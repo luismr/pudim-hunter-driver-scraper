@@ -2,7 +2,7 @@
 Base scraper job driver implementation.
 """
 from enum import Enum
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List
 from abc import abstractmethod
 
 from pudim_hunter_driver.driver import JobDriver
@@ -94,7 +94,7 @@ class ScraperJobDriver(JobDriver):
         pass
         
     @abstractmethod
-    def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
+    def transform_job(self, data: List[Any]) -> Optional[Job]:
         """Transform scraped data into a Job object.
         
         Args:
