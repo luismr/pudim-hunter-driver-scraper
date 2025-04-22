@@ -1,7 +1,8 @@
 """
 Base scraper job driver implementation.
 """
-from typing import Dict, Any, Optional
+from enum import Enum
+from typing import Dict, Any, Optional, Union
 from abc import abstractmethod
 
 from pudim_hunter_driver.driver import JobDriver
@@ -9,18 +10,44 @@ from pudim_hunter_driver.models import JobQuery, JobList, Job
 from pudim_hunter_driver.exceptions import DriverError
 
 from .scraper import PlaywrightScraper
+from .scraper_phantom import PhantomPlaywrightScraper
+
+class ScraperType(Enum):
+    """Enum for available scraper types."""
+    BASIC = "basic"
+    PHANTOM = "phantom"
 
 class ScraperJobDriver(JobDriver):
     """Base class for scraper-based job drivers."""
     
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = True, scraper_type: Union[str, ScraperType] = ScraperType.BASIC):
         """Initialize the driver.
         
         Args:
             headless: Whether to run the browser in headless mode.
+            scraper_type: Type of scraper to use ("basic" or "phantom")
         """
         self.headless = headless
         self._scraper: Optional[PlaywrightScraper] = None
+        
+        # Convert string to enum if needed
+        if isinstance(scraper_type, str):
+            try:
+                scraper_type = ScraperType(scraper_type.lower())
+            except ValueError:
+                raise ValueError(f"Invalid scraper type: {scraper_type}. Valid types are: {[t.value for t in ScraperType]}")
+        
+        self.scraper_type = scraper_type
+
+    def _create_scraper(self) -> PlaywrightScraper:
+        """Create a scraper instance based on the configured type.
+        
+        Returns:
+            An instance of the requested scraper type.
+        """
+        if self.scraper_type == ScraperType.PHANTOM:
+            return PhantomPlaywrightScraper(headless=self.headless)
+        return PlaywrightScraper(headless=self.headless)
 
     @property
     def scraper(self) -> PlaywrightScraper:
@@ -91,7 +118,7 @@ class ScraperJobDriver(JobDriver):
             DriverError: If job fetching fails.
         """
         try:
-            with PlaywrightScraper(headless=self.headless) as scraper:
+            with self._create_scraper() as scraper:
                 self._scraper = scraper  # Store the scraper instance
                 url = self.build_search_url(query)
                 self.scraper.navigate(url)
