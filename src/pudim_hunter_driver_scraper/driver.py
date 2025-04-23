@@ -94,7 +94,7 @@ class ScraperJobDriver(JobDriver):
         pass
         
     @abstractmethod
-    def transform_job(self, data: List[Any]) -> Optional[Job]:
+    def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
         """Transform scraped data into a Job object.
         
         Args:
@@ -104,7 +104,22 @@ class ScraperJobDriver(JobDriver):
             Job object or None if data is invalid.
         """
         pass
-        
+
+    @abstractmethod
+    def has_pagination(self) -> bool:
+        """Check if the job board has pagination."""
+        pass
+
+    @abstractmethod
+    def get_next_page_url(self, page_number: int) -> Optional[str]:
+        """Get the URL for the next page of results."""
+        pass
+
+    @abstractmethod
+    def has_pagination_items_per_page(self) -> bool:
+        """Check if the job board has pagination items per page."""
+        pass
+
     def fetch_jobs(self, query: JobQuery) -> JobList:
         """Fetch jobs using Playwright scraper.
         
@@ -113,6 +128,50 @@ class ScraperJobDriver(JobDriver):
             
         Returns:
             List of jobs matching the query.
+        """
+
+        page_number = 1
+        url = self.build_search_url(query)
+        raw_jobs = []
+
+        while True:
+            page_jobs = self.fetch_raw_jobs_from_url(url)
+            if page_jobs:
+                raw_jobs.extend(page_jobs)
+
+            if self.has_pagination():
+                next_page_number = page_number + 1
+                
+                url = self.get_next_page_url(next_page_number)
+                if not url:
+                    break
+
+                page_number = next_page_number
+            else:
+                break;
+
+        jobs = []
+        if raw_jobs:
+            for raw_job in raw_jobs:
+                job = self.transform_job(raw_job)
+                if job:
+                    jobs.append(job)
+        
+        return JobList(
+            jobs=jobs,
+            total_results=len(jobs),
+            page=query.page,
+            items_per_page=query.items_per_page
+        )
+            
+    def fetch_raw_jobs_from_url(self, url: str) -> Optional[List[Any]]:
+        """Fetch raw jobs from a given URL.
+        
+        Args:
+            url: The URL to fetch jobs from.
+            
+        Returns:
+            List of raw job data or None if no jobs found.
             
         Raises:
             DriverError: If job fetching fails.
@@ -120,24 +179,11 @@ class ScraperJobDriver(JobDriver):
         try:
             with self._create_scraper() as scraper:
                 self._scraper = scraper  # Store the scraper instance
-                url = self.build_search_url(query)
                 self.scraper.navigate(url)
                 
-                jobs = []
                 raw_jobs = self.extract_raw_job_data()
-                if raw_jobs:
-                    for raw_job in raw_jobs:
-                        job = self.transform_job(raw_job)
-                        if job:
-                            jobs.append(job)
-                
-                return JobList(
-                    jobs=jobs,
-                    total_results=len(jobs),
-                    page=query.page,
-                    items_per_page=query.items_per_page
-                )
-                
+                return raw_jobs
+
         except Exception as e:
             raise DriverError(f"Failed to fetch jobs: {str(e)}")
         finally:

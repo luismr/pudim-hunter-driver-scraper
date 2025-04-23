@@ -29,9 +29,18 @@ class DummyJobDriver(ScraperJobDriver):
             
         # Convert elements to test data
         return [{"name": elem.text_content()} for elem in elements]
-        
+
+    def has_pagination(self) -> bool:
+        return False
+    
+    def has_pagination_items_per_page(self) -> bool:
+        return False
+    
+    def get_next_page_url(self, page_number: int) -> Optional[str]:
+        return "https://github.com/jobs/1"
+    
     def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
-        if not data.get("name"):
+        if not data or not isinstance(data, dict) or not data.get("name"):
             return None
             
         return Job(

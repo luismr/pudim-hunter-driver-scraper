@@ -129,7 +129,15 @@ class DummyPhantomJobDriver(ScraperJobDriver):
         """Transform raw job data into Job model."""
         pass
 
-@pytest.mark.no_ci
+    def has_pagination(self) -> bool:
+        return False
+    
+    def get_next_page_url(self, page_number: int) -> Optional[str]:
+        return None
+    
+    def has_pagination_items_per_page(self) -> bool:
+        return False
+
 def test_phantom_driver_search():
     """Test job search functionality with phantom driver."""
     driver = DummyPhantomJobDriver()
@@ -143,7 +151,6 @@ def test_phantom_driver_search():
     job_list = driver.fetch_jobs(query)
     assert len(job_list.jobs) > 0, "Should find at least one job"
     
-@pytest.mark.no_ci
 def test_phantom_driver_cleanup():
     """Test that phantom scraper is cleaned up after job fetching."""
     driver = DummyPhantomJobDriver()
@@ -160,7 +167,6 @@ def test_phantom_driver_cleanup():
     with pytest.raises(RuntimeError, match="Scraper not initialized"):
         _ = driver.scraper
 
-@pytest.mark.no_ci
 def test_phantom_driver_error_handling():
     """Test error handling in phantom driver."""
     class ErrorPhantomDriver(DummyPhantomJobDriver):
