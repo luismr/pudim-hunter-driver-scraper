@@ -135,30 +135,27 @@ class ScraperJobDriver(JobDriver):
                 self._scraper = scraper  # Store the scraper instance
                 page_number = 1
                 url = self.build_search_url(query)
-                raw_jobs = []
+
+                jobs = []
 
                 while True:
-                    page_jobs = self.fetch_raw_jobs_from_url(url)
-                    if page_jobs:
-                        raw_jobs.extend(page_jobs)
+                    raw_jobs = self.fetch_raw_jobs_from_url(url)
+
+                    if raw_jobs:
+                        for raw_job in raw_jobs:
+                            job = self.transform_job(raw_job)
+                            if job:
+                                jobs.append(job)
 
                     if self.has_pagination():
-                        next_page_number = page_number + 1
-                        
+                        next_page_number = page_number + 1                        
                         url = self.get_next_page_url(next_page_number)
                         if not url:
                             break
 
                         page_number = next_page_number
                     else:
-                        break;
-                
-                jobs = []
-                if raw_jobs:
-                    for raw_job in raw_jobs:
-                        job = self.transform_job(raw_job)
-                        if job:
-                            jobs.append(job)
+                        break;                
                 
                 return JobList(
                     jobs=jobs,
