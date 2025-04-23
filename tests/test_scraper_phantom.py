@@ -6,10 +6,16 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from pudim_hunter_driver_scraper.scraper_phantom import PhantomPlaywrightScraper
 from pudim_hunter_driver_scraper.scraper import PlaywrightScraper
 from screenshots import ScreenshotTaker
+import os
+
+# Skip all tests in this module if running in CI
+pytestmark = pytest.mark.skipif(
+    os.getenv("GITHUB_ACTIONS") == "true",
+    reason="Phantom scraper tests are skipped in CI environment due to IP blocking"
+)
 
 TEST_URL = "https://bot.sannysoft.com"
 
-@pytest.mark.skip(reason="no way of currently testing this")
 def test_bot_detection_site():
     """Test access to bot detection test site."""
     scraper = PhantomPlaywrightScraper(navigation_timeout=60000)  # 60 second timeout
@@ -68,7 +74,6 @@ def test_bot_detection_site():
             screenshots.take_error_screenshot(scraper.page)
         raise
 
-@pytest.mark.skip(reason="no way of currently testing this")
 def test_basic_scraper_comparison():
     """Test that our anti-detection features make a difference."""
     # First try with basic scraper

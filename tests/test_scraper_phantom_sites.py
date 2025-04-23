@@ -2,9 +2,16 @@
 Tests for the PhantomPlaywrightScraper against real sites.
 """
 import pytest
+import os
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from pudim_hunter_driver_scraper.scraper_phantom import PhantomPlaywrightScraper
 from screenshots import ScreenshotTaker
+
+# Skip all tests in this module if running in CI
+pytestmark = pytest.mark.skipif(
+    os.getenv("GITHUB_ACTIONS") == "true",
+    reason="Phantom scraper tests are skipped in CI environment due to IP blocking"
+)
 
 SIMPLYHIRED_URL = "https://www.simplyhired.com"
 SIMPLYHIRED_SEARCH_URL = "https://www.simplyhired.com/search?q=software+engineer&l=San+Francisco%2C+CA"

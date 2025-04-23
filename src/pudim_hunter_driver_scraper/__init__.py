@@ -1,8 +1,14 @@
 """
-Pudim Hunter Driver Scraper - A Playwright-based scraper implementation for The Pudim Hunter platform.
+Pudim Hunter Driver Scraper - A Playwright-based web scraping framework.
 """
 
 from .scraper import PlaywrightScraper
-from .driver import ScraperJobDriver
+from .scraper_phantom import PhantomPlaywrightScraper
+from .driver import ScraperJobDriver, ScraperType
 
-__all__ = ["PlaywrightScraper", "ScraperJobDriver"] 
+__all__ = [
+    'PlaywrightScraper',
+    'PhantomPlaywrightScraper', 
+    'ScraperJobDriver',
+    'ScraperType'
+] 

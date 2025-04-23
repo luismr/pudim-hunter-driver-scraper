@@ -1,6 +1,7 @@
 """
 Tests for PhantomPlaywrightScraper with a dummy job driver implementation.
 """
+import os
 import pytest
 from datetime import datetime
 from typing import Dict, Any, Optional, List
@@ -10,6 +11,12 @@ from pudim_hunter_driver_scraper import ScraperJobDriver
 from pudim_hunter_driver_scraper.driver import ScraperType
 from pudim_hunter_driver_scraper.scraper_phantom import PhantomPlaywrightScraper
 from screenshots import ScreenshotTaker
+
+# Skip all tests in this module if running in CI
+pytestmark = pytest.mark.skipif(
+    os.getenv("GITHUB_ACTIONS") == "true",
+    reason="Phantom scraper tests are skipped in CI environment due to IP blocking"
+)
 
 class DummyPhantomJobDriver(ScraperJobDriver):
     """Test implementation of ScraperJobDriver using PhantomPlaywrightScraper."""
@@ -122,6 +129,7 @@ class DummyPhantomJobDriver(ScraperJobDriver):
         """Transform raw job data into Job model."""
         pass
 
+@pytest.mark.no_ci
 def test_phantom_driver_search():
     """Test job search functionality with phantom driver."""
     driver = DummyPhantomJobDriver()
@@ -135,7 +143,7 @@ def test_phantom_driver_search():
     job_list = driver.fetch_jobs(query)
     assert len(job_list.jobs) > 0, "Should find at least one job"
     
-
+@pytest.mark.no_ci
 def test_phantom_driver_cleanup():
     """Test that phantom scraper is cleaned up after job fetching."""
     driver = DummyPhantomJobDriver()
@@ -152,6 +160,7 @@ def test_phantom_driver_cleanup():
     with pytest.raises(RuntimeError, match="Scraper not initialized"):
         _ = driver.scraper
 
+@pytest.mark.no_ci
 def test_phantom_driver_error_handling():
     """Test error handling in phantom driver."""
     class ErrorPhantomDriver(DummyPhantomJobDriver):
