@@ -130,25 +130,32 @@ class ScraperJobDriver(JobDriver):
             List of jobs matching the query.
         """
 
-        page_number = 1
-        url = self.build_search_url(query)
-        raw_jobs = []
+        try:
+            with self._create_scraper() as scraper:
+                self._scraper = scraper  # Store the scraper instance
+                page_number = 1
+                url = self.build_search_url(query)
+                raw_jobs = []
 
-        while True:
-            page_jobs = self.fetch_raw_jobs_from_url(url)
-            if page_jobs:
-                raw_jobs.extend(page_jobs)
+                while True:
+                    page_jobs = self.fetch_raw_jobs_from_url(url)
+                    if page_jobs:
+                        raw_jobs.extend(page_jobs)
 
-            if self.has_pagination():
-                next_page_number = page_number + 1
-                
-                url = self.get_next_page_url(next_page_number)
-                if not url:
-                    break
+                    if self.has_pagination():
+                        next_page_number = page_number + 1
+                        
+                        url = self.get_next_page_url(next_page_number)
+                        if not url:
+                            break
 
-                page_number = next_page_number
-            else:
-                break;
+                        page_number = next_page_number
+                    else:
+                        break;
+        except Exception as e:
+            raise DriverError(f"Failed to create scraper: {str(e)}")
+        finally:
+            self._scraper = None 
 
         jobs = []
         if raw_jobs:
@@ -176,18 +183,10 @@ class ScraperJobDriver(JobDriver):
         Raises:
             DriverError: If job fetching fails.
         """
-        try:
-            with self._create_scraper() as scraper:
-                self._scraper = scraper  # Store the scraper instance
-                self.scraper.navigate(url)
-                
-                raw_jobs = self.extract_raw_job_data()
-                return raw_jobs
+        self.scraper.navigate(url)        
+        raw_jobs = self.extract_raw_job_data()
+        return raw_jobs
 
-        except Exception as e:
-            raise DriverError(f"Failed to fetch jobs: {str(e)}")
-        finally:
-            self._scraper = None  # Always clean up the scraper reference
             
     def validate_credentials(self) -> bool:
         """Validate driver credentials.
