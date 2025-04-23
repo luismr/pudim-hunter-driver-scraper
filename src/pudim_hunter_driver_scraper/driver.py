@@ -152,25 +152,29 @@ class ScraperJobDriver(JobDriver):
                         page_number = next_page_number
                     else:
                         break;
+                
+                jobs = []
+                if raw_jobs:
+                    for raw_job in raw_jobs:
+                        job = self.transform_job(raw_job)
+                        if job:
+                            jobs.append(job)
+                
+                return JobList(
+                    jobs=jobs,
+                    total_results=len(jobs),
+                    page=query.page,
+                    items_per_page=query.items_per_page
+                )
+
         except Exception as e:
             raise DriverError(f"Failed to create scraper: {str(e)}")
         finally:
             self._scraper = None 
 
-        jobs = []
-        if raw_jobs:
-            for raw_job in raw_jobs:
-                job = self.transform_job(raw_job)
-                if job:
-                    jobs.append(job)
-        
-        return JobList(
-            jobs=jobs,
-            total_results=len(jobs),
-            page=query.page,
-            items_per_page=query.items_per_page
-        )
-            
+        return None
+
+
     def fetch_raw_jobs_from_url(self, url: str) -> Optional[List[Any]]:
         """Fetch raw jobs from a given URL.
         
