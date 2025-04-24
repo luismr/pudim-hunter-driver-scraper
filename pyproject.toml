@@ -47,5 +47,14 @@ profile = "black"
 multi_line_output = 3
 
 [tool.pytest.ini_options]
-addopts = "--cov=pudim_hunter_driver_scraper --cov-report=xml --cov-report=term-missing"
-testpaths = ["tests"] 
+addopts = "--cov=pudim_hunter_driver_scraper --cov-report=xml --cov-report=term-missing --cov-report=term"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = [
+    "*/__init__.py",
+    "*/_version.py",
+    "*/tests/*",
+    "*/setup.py",
+    "*/conftest.py"
+] 

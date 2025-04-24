@@ -75,10 +75,18 @@ pip install -e .
 This package provides the base scraper implementation for job search drivers. To create a scraper for a specific job board, you'll need to extend the `ScraperJobDriver` class and implement the required methods.
 
 1. `ScraperJobDriver` (ABC) - The base scraper class that implements `JobDriver`:
-   * `build_search_url(query: JobQuery) -> str`
-   * `get_selectors() -> Dict[str, str]`
-   * `extract_raw_job_data() -> Optional[List[Dict[str, Any]]]`
-   * `transform_job(data: Dict[str, Any]) -> Optional[Job]`
+   * Required Methods:
+     * `build_search_url(query: JobQuery) -> str` - Build the search URL for the job board
+     * `get_selectors() -> Dict[str, str]` - Get CSS selectors for job elements
+     * `extract_raw_job_data() -> Optional[Any]` - Extract raw job data from the page
+     * `transform_job(data: Dict[str, Any]) -> Optional[Job]` - Transform raw data into Job model
+     * `has_pagination() -> bool` - Check if the job board has pagination
+     * `get_next_page_url(page_number: int) -> Optional[str]` - Get URL for next page
+     * `has_pagination_items_per_page() -> bool` - Check if pagination supports items per page
+     * `has_description_support_enabled() -> bool` - Check if description support is enabled
+     * `get_description(job: Job) -> Optional[str]` - Get job description
+     * `has_qualifications_support_enabled() -> bool` - Check if qualifications support is enabled
+     * `get_qualifications(job: Job) -> Optional[List[str]]` - Get job qualifications
 
 2. `PlaywrightScraper` - The base scraper implementation:
    * Handles browser lifecycle
@@ -98,6 +106,7 @@ This package provides the base scraper implementation for job search drivers. To
 
 ```python
 from typing import Dict, Any, Optional, List
+from datetime import datetime
 from pudim_hunter_driver.models import JobQuery, Job
 from pudim_hunter_driver_scraper import ScraperJobDriver
 from pudim_hunter_driver_scraper.driver import ScraperType
@@ -146,12 +155,42 @@ class MyPhantomJobDriver(ScraperJobDriver):
             title=data["title"],
             company=data["company"],
             location="",
-            description="",
+            summary="",
             url="",
             remote=False,
             source="Example",
             posted_at=datetime.now()
         )
+    
+    def has_pagination(self) -> bool:
+        """Check if the job board has pagination."""
+        return True
+    
+    def get_next_page_url(self, page_number: int) -> Optional[str]:
+        """Get URL for next page of results."""
+        return f"https://example.com/jobs?page={page_number}"
+    
+    def has_pagination_items_per_page(self) -> bool:
+        """Check if pagination supports items per page."""
+        return True
+    
+    def has_description_support_enabled(self) -> bool:
+        """Check if description support is enabled."""
+        return True
+    
+    def get_description(self, job: Job) -> Optional[str]:
+        """Get job description."""
+        # Implement description extraction logic
+        return None
+    
+    def has_qualifications_support_enabled(self) -> bool:
+        """Check if qualifications support is enabled."""
+        return True
+    
+    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+        """Get job qualifications."""
+        # Implement qualifications extraction logic
+        return None
 ```
 
 ### Usage Examples
