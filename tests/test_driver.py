@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional, List
 from pudim_hunter_driver.models import JobQuery, Job
 from pudim_hunter_driver.exceptions import DriverError
 from pudim_hunter_driver_scraper import ScraperJobDriver
+from playwright.sync_api import ElementHandle
 
 class DummyJobDriver(ScraperJobDriver):
     """Test implementation of ScraperJobDriver."""
@@ -39,10 +40,10 @@ class DummyJobDriver(ScraperJobDriver):
     def get_next_page_url(self, page_number: int) -> Optional[str]:
         return "https://github.com/jobs/1"
     
-    def get_description(self, job: Job) -> Optional[str]:
+    def get_description(self, element: ElementHandle) -> Optional[str]:
         return None
     
-    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+    def get_qualifications(self, element: ElementHandle) -> Optional[List[str]]:
         return None
     
     def has_description_support_enabled(self) -> bool:

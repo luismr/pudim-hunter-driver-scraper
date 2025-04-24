@@ -11,6 +11,7 @@ from pudim_hunter_driver.exceptions import DriverError
 
 from .scraper import PlaywrightScraper
 from .scraper_phantom import PhantomPlaywrightScraper
+from playwright.sync_api import ElementHandle
 
 class ScraperType(Enum):
     """Enum for available scraper types."""
@@ -126,7 +127,7 @@ class ScraperJobDriver(JobDriver):
         pass
 
     @abstractmethod
-    def get_description(self) -> Optional[str]:
+    def get_description(self, element: ElementHandle) -> Optional[str]:
         """Get the description support for the job board."""
         pass
 
@@ -136,9 +137,10 @@ class ScraperJobDriver(JobDriver):
         pass
 
     @abstractmethod
-    def get_qualifications(self) -> Optional[List[str]]:
+    def get_qualifications(self, element: ElementHandle) -> Optional[List[str]]:
         """Get the qualifications support for the job board."""
         pass
+
 
     def fetch_jobs(self, query: JobQuery) -> JobList:
         """Fetch jobs using Playwright scraper.
@@ -166,10 +168,10 @@ class ScraperJobDriver(JobDriver):
                             job = self.transform_job(raw_job)
 
                             if self.has_description_support_enabled() and job:
-                                job.description = self.get_description()
+                                job.description = self.get_description(raw_job)
 
                             if self.has_qualifications_support_enabled() and job:
-                                job.qualifications = self.get_qualifications()
+                                job.qualifications = self.get_qualifications(raw_job)
 
                             if job:
                                 jobs.append(job)

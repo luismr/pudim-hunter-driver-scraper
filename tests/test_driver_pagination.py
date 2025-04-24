@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional, List
 from pudim_hunter_driver.models import JobQuery, Job, JobList
 from pudim_hunter_driver.exceptions import DriverError
 from pudim_hunter_driver_scraper import ScraperJobDriver
+from playwright.sync_api import ElementHandle
 
 class PaginatedJobDriver(ScraperJobDriver):
     """Test implementation of ScraperJobDriver with pagination support."""
@@ -70,10 +71,10 @@ class PaginatedJobDriver(ScraperJobDriver):
             return self.build_search_url(JobQuery(keywords="test", location="remote"))
         return None
     
-    def get_description(self, job: Job) -> Optional[str]:
+    def get_description(self, element: ElementHandle) -> Optional[str]:
         return None
     
-    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+    def get_qualifications(self, element: ElementHandle) -> Optional[List[str]]:
         return None
     
     def has_description_support_enabled(self) -> bool:
