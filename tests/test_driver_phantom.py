@@ -11,6 +11,7 @@ from pudim_hunter_driver_scraper import ScraperJobDriver
 from pudim_hunter_driver_scraper.driver import ScraperType
 from pudim_hunter_driver_scraper.scraper_phantom import PhantomPlaywrightScraper
 from screenshots import ScreenshotTaker
+from playwright.sync_api import ElementHandle
 
 # Skip all tests in this module if running in CI
 pytestmark = pytest.mark.skipif(
@@ -138,10 +139,10 @@ class DummyPhantomJobDriver(ScraperJobDriver):
     def has_pagination_items_per_page(self) -> bool:
         return False
     
-    def get_description(self, job: Job) -> Optional[str]:
+    def get_description(self, element: ElementHandle) -> Optional[str]:
         return None
     
-    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+    def get_qualifications(self, element: ElementHandle) -> Optional[List[str]]:
         return None
     
     def has_description_support_enabled(self) -> bool:
