@@ -120,6 +120,26 @@ class ScraperJobDriver(JobDriver):
         """Check if the job board has pagination items per page."""
         pass
 
+    @abstractmethod
+    def has_description_support_enabled(self) -> bool:
+        """Check if the job board has description support."""
+        pass
+
+    @abstractmethod
+    def get_description(self) -> Optional[str]:
+        """Get the description support for the job board."""
+        pass
+
+    @abstractmethod
+    def has_qualifications_support_enabled(self) -> bool:
+        """Check if the job board has qualifications support."""
+        pass
+
+    @abstractmethod
+    def get_qualifications(self) -> Optional[List[str]]:
+        """Get the qualifications support for the job board."""
+        pass
+
     def fetch_jobs(self, query: JobQuery) -> JobList:
         """Fetch jobs using Playwright scraper.
         
@@ -144,6 +164,13 @@ class ScraperJobDriver(JobDriver):
                     if raw_jobs:
                         for raw_job in raw_jobs:
                             job = self.transform_job(raw_job)
+
+                            if self.has_description_support_enabled() and job:
+                                job.description = self.get_description()
+
+                            if self.has_qualifications_support_enabled() and job:
+                                job.qualifications = self.get_qualifications()
+
                             if job:
                                 jobs.append(job)
 

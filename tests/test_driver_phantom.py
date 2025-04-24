@@ -67,7 +67,7 @@ class DummyPhantomJobDriver(ScraperJobDriver):
                         title=f"Dummy Job {i}",
                         company="Dummy Company",
                         location="Dummy Location",
-                        description="Dummy Description",
+                        summary="Dummy Description",
                         url="https://example.com",
                         remote=False,
                         source="SimplyHired",
@@ -136,6 +136,18 @@ class DummyPhantomJobDriver(ScraperJobDriver):
         return None
     
     def has_pagination_items_per_page(self) -> bool:
+        return False
+    
+    def get_description(self, job: Job) -> Optional[str]:
+        return None
+    
+    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+        return None
+    
+    def has_description_support_enabled(self) -> bool:
+        return False
+    
+    def has_qualifications_support_enabled(self) -> bool:
         return False
 
 def test_phantom_driver_search():

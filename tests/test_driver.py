@@ -39,6 +39,18 @@ class DummyJobDriver(ScraperJobDriver):
     def get_next_page_url(self, page_number: int) -> Optional[str]:
         return "https://github.com/jobs/1"
     
+    def get_description(self, job: Job) -> Optional[str]:
+        return None
+    
+    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+        return None
+    
+    def has_description_support_enabled(self) -> bool:
+        return False
+    
+    def has_qualifications_support_enabled(self) -> bool:
+        return False
+    
     def transform_job(self, data: Dict[str, Any]) -> Optional[Job]:
         if not data or not isinstance(data, dict) or not data.get("name"):
             return None
@@ -48,7 +60,7 @@ class DummyJobDriver(ScraperJobDriver):
             title=data["name"],
             company="GitHub",
             location="Remote",
-            description="Test job",
+            summary="Test job",
             url="https://github.com/jobs/1",
             remote=True,
             source="GitHub",

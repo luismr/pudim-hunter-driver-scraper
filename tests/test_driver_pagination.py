@@ -48,7 +48,7 @@ class PaginatedJobDriver(ScraperJobDriver):
             title=data["name"],
             company="Test Company",
             location="Remote",
-            description="Test job description",
+            summary="Test job description",
             url=f"https://example.com/jobs/{data['name'].split()[-1]}",
             remote=True,
             source="TestSource",
@@ -69,6 +69,18 @@ class PaginatedJobDriver(ScraperJobDriver):
             self._current_page = page_number
             return self.build_search_url(JobQuery(keywords="test", location="remote"))
         return None
+    
+    def get_description(self, job: Job) -> Optional[str]:
+        return None
+    
+    def get_qualifications(self, job: Job) -> Optional[List[str]]:
+        return None
+    
+    def has_description_support_enabled(self) -> bool:
+        return False
+    
+    def has_qualifications_support_enabled(self) -> bool:
+        return False
 
 def test_pagination_first_page():
     """Test fetching first page of results."""
